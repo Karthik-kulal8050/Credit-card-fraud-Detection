@@ -6,6 +6,12 @@ The project focuses on handling highly imbalanced transaction data and evaluatin
 
 ---
 
+## 🌐 Live Demo
+
+Try the deployed application:
+
+👉 **[Credit Card Fraud Detection – Live Demo](https://credit-card-fraud-detection-f3fdzd84qdnlt6bijdfrvg.streamlit.app/)**
+
 ## 📌 Project Overview
 
 Credit card fraud detection is a highly imbalanced classification problem where fraudulent transactions represent only a very small percentage of all transactions.
