@@ -18,7 +18,8 @@ from sklearn.metrics import (
 from imblearn.over_sampling import SMOTE
 
 from src.preprocessing import prepare_features, SCALE_COLUMNS
-
+import mlflow
+import mlflow.sklearn
 
 # ============================================================
 # PATHS
@@ -57,6 +58,18 @@ N_ESTIMATORS = 200
 MIN_SAMPLES_LEAF = 2
 
 
+mlflow.set_experiment("fraud-detection")
+mlflow.start_run()
+mlflow.log_params({
+    "model": "Random Forest",
+    "n_estimators": N_ESTIMATORS,
+    "min_samples_leaf": MIN_SAMPLES_LEAF,
+    "random_state": RANDOM_STATE,
+    "test_size": TEST_SIZE,
+    "smote_ratio": SMOTE_RATIO
+})
+
+
 # ============================================================
 # 1. LOAD DATA
 # ============================================================
@@ -69,6 +82,11 @@ df = pd.read_csv(DATA_PATH)
 
 print("Original dataset shape:", df.shape)
 
+mlflow.log_params({
+    "dataset_rows": df.shape[0],
+    "dataset_columns": df.shape[1]
+})
+
 
 # ============================================================
 # 2. REMOVE EXACT DUPLICATES
@@ -77,6 +95,7 @@ print("Original dataset shape:", df.shape)
 print("\nRemoving exact duplicate rows...")
 
 duplicate_count = df.duplicated().sum()
+mlflow.log_param("duplicate_rows_removed", int(duplicate_count))
 
 print("Duplicate rows found:", duplicate_count)
 
@@ -195,6 +214,12 @@ X_train_smote, y_train_smote = smote.fit_resample(
 
 print("Original training shape:", X_train_scaled.shape)
 print("After SMOTE:", X_train_smote.shape)
+
+mlflow.log_params({
+    "train_samples_before_smote": X_train_scaled.shape[0],
+    "train_samples_after_smote": X_train_smote.shape[0]
+})
+
 
 print("\nOriginal class distribution:")
 print(y_train.value_counts())
@@ -444,6 +469,15 @@ print("\nThreshold saved to:")
 print(threshold_path)
 
 
+mlflow.sklearn.log_model(
+    model,
+    name="fraud_random_forest",
+    skops_trusted_types=["sklearn.tree._tree.Tree"]
+)
+mlflow.log_artifact(scaler_path)
+mlflow.log_artifact(threshold_path)
+
+
 # ============================================================
 # 16. FINAL SUMMARY
 # ============================================================
@@ -455,6 +489,18 @@ print("=" * 60)
 print(f"Test ROC-AUC : {test_roc_auc:.4f}")
 print(f"Test PR-AUC  : {test_pr_auc:.4f}")
 print(f"Threshold    : {best_threshold:.4f}")
+
+mlflow.log_metrics({
+    "validation_precision": best_precision,
+    "validation_recall": best_recall,
+    "validation_f1": best_f1,
+    "test_roc_auc": test_roc_auc,
+    "test_pr_auc": test_pr_auc,
+    "decision_threshold": best_threshold
+})
+
+
+mlflow.end_run()
 
 print("\nArtifacts:")
 print("- fraud_random_forest.pkl")

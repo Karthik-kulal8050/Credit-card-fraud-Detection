@@ -1,6 +1,6 @@
 pandas
 numpy
-scikit-learn
-imbalanced-learn
+scikit-learn==1.7.1
 joblib
-streamlit
+fastapi
+uvicorn
